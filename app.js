@@ -3,12 +3,14 @@ const app = express();
 const mongoose = require('mongoose');
 const listings = require('./models/listing.js');
 const path = require('path');
+const methodOverride = require('method-override');
 
 const url = "mongodb://127.0.0.1:27017/wonderlust";
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));  
+app.use(methodOverride('_method')); // for PUT and DELETE requests
 
 app.get('/', (req, res) => {
   res.send('Hello Wonderlust!');
@@ -37,6 +39,28 @@ app.post('/listings', async (req, res) => {
   const newlisting = new listings(req.body.listing);
   await newlisting.save();
   res.redirect('/listings');
+});
+
+//edit route
+app.get('/listings/:id/edit', async (req, res) => {
+  const {id} = req.params;
+  const listing = await listings.findById(id);
+  res.render('listings/edit.ejs', {listing});
+});
+
+//update route
+app.put('/listings/:id', async (req, res) => {
+  const { id } = req.params;
+  await listings.findByIdAndUpdate(id, {...req.body.listing});
+  res.redirect(`/listings/${id}`);
+});
+
+//delete route
+app.delete('/listings/:id', async (req, res) => {
+  const { id } = req.params;
+  let deletedListing = await listings.findByIdAndDelete(id);
+  console.log(`Deleted listing: ${deletedListing}`);
+  res.redirect('/listings' );
 });
 
 async function connect() {
