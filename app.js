@@ -8,33 +8,37 @@ const url = "mongodb://127.0.0.1:27017/wonderlust";
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
+app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+  res.send('Hello Wonderlust!');
 });
 
-app.listen(8080, () => {
-  console.log('Server is running on port 8080');
-});
-
+//home route
 app.get('/listings', async (req, res) => { 
-  const allListing= await listings.find({});
-      console.log(allListing);
-      res.render('/listings/index.ejs', {allListing} );
+  const allListings = await listings.find({});
+  res.render('listings/index.ejs', {allListings} );
 });
 
-// app.get('/testlisting', async (req, res) => {
-//     let sampleListing = new listings({
-//         title: "Sample Listing",
-//         description: "This is a sample listing for testing purposes.",
-//         price: 100,
-//         location: "Sample Location",
-//         country: "Sample Country"
-//     });
-//     await sampleListing.save();
-//     console.log("Sample listing saved to database.");
-//     res.send("Sample listing created and saved.");
-//   });
+//new route
+app.get('/listings/new',(req, res) => {
+  res.render('listings/new.ejs');
+});
+
+//show route
+app.get('/listings/:id',async (req, res) => {
+  let {id} = req.params;
+  const listing = await listings.findById(id);
+  res.render('listings/show.ejs', {listing} );
+});
+
+//create route
+app.post('/listings', async (req, res) => {
+  const newlisting = new listings(req.body.listing);
+  newlisting.save();
+  console.log(newlisting);
+  res.redirect('/listings');
+});
 
 async function connect() {
     try {
@@ -49,3 +53,7 @@ connect().then(() => {
     console.log('Database connection established');}).catch(err => {
     console.error('Database connection failed:', err);
     });
+
+app.listen(8080, () => {
+  console.log('Server is running on port 8080');
+});
